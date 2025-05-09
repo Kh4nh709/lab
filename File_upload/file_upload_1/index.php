@@ -26,8 +26,6 @@ if (isset($_FILES["file"])) {
         $error = $e->getMessage();
     }
 
-echo "hello world";
-
 }
 ?>
 
