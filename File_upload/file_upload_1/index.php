@@ -25,8 +25,13 @@ if (isset($_FILES["file"])) {
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
+
+echo "hello world";
+
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
