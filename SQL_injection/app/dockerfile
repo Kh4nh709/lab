@@ -1,0 +1,27 @@
+# Base image: PHP 7.2 with Apache web server
+FROM php:7.2-apache
+
+# Install required PHP extensions for database connectivity
+RUN docker-php-ext-install mysqli pdo pdo_mysql
+
+# Set working directory to Apache's default web root
+WORKDIR /var/www/html/
+
+# Copy application files and configuration
+COPY ./src /var/www/html/
+
+# Configure file permissions for security
+# Set ownership to root:www-data
+RUN chown -R root:www-data /var/www/html
+# Set directory permissions to 750 (rwxr-x---)
+RUN chmod 750 /var/www/html
+# Set file permissions to 640 (rw-r-----)
+RUN find . -type f -exec chmod 640 {} \;
+# Set directory permissions to 750 (rwxr-x---)
+RUN find . -type d -exec chmod 750 {} \;
+
+RUN chmod g+w /var/www/html/
+
+# Set sticky bit on all files and directories for additional security
+RUN chmod +t -R /var/www/html/
+

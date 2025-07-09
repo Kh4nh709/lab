@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Lỗ Hổng XSS – Cross Site Scripting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fdfdfd;
+      color: #222;
+      line-height: 1.7;
+      padding: 40px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #d63384;
+    }
+    pre {
+      background: #f1f1f1;
+      padding: 10px;
+      overflow-x: auto;
+      border-left: 4px solid #d63384;
+    }
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    a {
+      color: #d63384;
+    }
+    hr {
+      margin: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ Hiểu Rõ Lỗ Hổng XSS – Khi Trình Duyệt Bị Lừa Dối</h1>
+
+  <h2>✅ 1. XSS là gì?</h2>
+  <p><strong>XSS (Cross-Site Scripting)</strong> là một lỗ hổng bảo mật phổ biến cho phép hacker chèn mã JavaScript độc hại vào trang web mà người dùng truy cập. Khi đoạn mã được thực thi, attacker có thể:</p>
+  <ul>
+    <li>Đánh cắp cookie hoặc token</li>
+    <li>Chiếm quyền phiên đăng nhập</li>
+    <li>Ghi bàn phím (keylogger)</li>
+    <li>Chuyển hướng đến trang phishing</li>
+  </ul>
+
+  <h2>🧪 2. Ví dụ đơn giản</h2>
+  <pre><code>http://example.com/search?q=&lt;script&gt;alert('XSS!')&lt;/script&gt;</code></pre>
+  <p>Nếu server hiển thị lại từ khóa tìm kiếm mà không mã hóa HTML, đoạn mã trên sẽ được thực thi ngay trên trình duyệt người dùng.</p>
+
+  <h2>⚠️ 3. Các loại XSS</h2>
+  <table>
+    <tr><th>Loại</th><th>Mô tả</th></tr>
+    <tr><td>Stored XSS</td><td>Mã độc được lưu trong CSDL, hiển thị lại cho người khác.</td></tr>
+    <tr><td>Reflected XSS</td><td>Mã độc phản hồi trực tiếp từ URL hoặc form.</td></tr>
+    <tr><td>DOM-based XSS</td><td>Tấn công bằng cách thao tác DOM phía client (JavaScript).</td></tr>
+  </table>
+
+  <h2>🎯 4. Mục tiêu thường bị tấn công</h2>
+  <ul>
+    <li>Trang tìm kiếm, bình luận, đánh giá</li>
+    <li>URL có query string không lọc</li>
+    <li>Hệ thống quản lý nội dung (CMS)</li>
+  </ul>
+
+  <h2>🧷 5. Cách phòng chống XSS</h2>
+  <ul>
+    <li>Escape tất cả output HTML (sử dụng `htmlspecialchars()` trong PHP)</li>
+    <li>Dùng thư viện lọc đầu vào: DOMPurify, OWASP Encoder</li>
+    <li>Sử dụng HTTP headers như:
+      <ul>
+        <li><code>Content-Security-Policy</code></li>
+        <li><code>X-XSS-Protection</code></li>
+      </ul>
+    </li>
+    <li>Không bao giờ tin tưởng dữ liệu từ client</li>
+  </ul>
+
+  <h2>📚 Tài liệu tham khảo</h2>
+  <ul>
+    <li><a href="https://owasp.org/www-community/xss" target="_blank">OWASP - XSS</a></li>
+    <li><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection" target="_blank">PayloadAllTheThings - XSS</a></li>
+  </ul>
+
+  <h2>✍️ Kết luận</h2>
+  <p>XSS vẫn là một trong những lỗ hổng phổ biến nhất trong OWASP Top 10. Việc phát hiện và ngăn chặn XSS nên trở thành tiêu chuẩn trong phát triển web an toàn. Nếu bạn đang làm frontend hoặc backend, hãy chắc chắn rằng mình hiểu rõ và kiểm soát dữ liệu đầu vào và đầu ra.</p>
+
+  <hr>
+  <p><em>Viết bởi: Nguyễn Chí Khanh – Blog bảo mật & pentest</em></p>
+
+</body>
+</html>

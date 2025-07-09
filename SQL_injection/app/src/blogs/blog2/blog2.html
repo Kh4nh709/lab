@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Blog Bảo Mật: Tìm Hiểu Lỗ Hổng Path Traversal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.6;
+      padding: 40px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      color: #0a58ca;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      overflow-x: auto;
+      border-left: 4px solid #0a58ca;
+    }
+    code {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    blockquote {
+      margin: 1em 0;
+      padding: 0.5em 1em;
+      background: #fffbe6;
+      border-left: 4px solid #ffc107;
+    }
+    a {
+      color: #0a58ca;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    hr {
+      margin: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🛡️ Tìm Hiểu Lỗ Hổng Path Traversal – Khi Ứng Dụng Web Bị “Đi Lạc Đường”</h1>
+
+  <h2>💡 Giới thiệu</h2>
+  <p>Trong thế giới bảo mật web, không phải lúc nào kẻ tấn công cũng phải vượt qua firewall hay chiếm quyền quản trị để xâm nhập hệ thống. Đôi khi, chỉ với một vài dòng URL thông minh, chúng có thể <strong>truy cập vào những tập tin nhạy cảm</strong> trên máy chủ. Đó chính là sức mạnh của một lỗ hổng thường bị đánh giá thấp: <strong>Path Traversal (Directory Traversal)</strong>.</p>
+
+  <hr>
+
+  <h2>🔍 Path Traversal là gì?</h2>
+  <p>Path Traversal là một kiểu tấn công trong đó hacker khai thác <strong>đầu vào không được kiểm soát hoặc lọc đúng cách</strong>, nhằm điều hướng chương trình truy cập vào <strong>các tập tin hoặc thư mục nằm ngoài thư mục dự định ban đầu</strong>.</p>
+
+  <p>Ví dụ:</p>
+  <pre><code>http://example.com/view.php?file=report.txt</code></pre>
+
+  <p>Nếu máy chủ ghép giá trị đó vào một đường dẫn cố định:</p>
+  <pre><code>include("/var/www/files/report.txt");</code></pre>
+
+  <p>Attacker thay đổi thành:</p>
+  <pre><code>file=../../../../etc/passwd</code></pre>
+
+  <p>Và máy chủ thực hiện:</p>
+  <pre><code>include("/var/www/files/../../../../etc/passwd");</code></pre>
+
+  <hr>
+
+  <h2>🧪 Ví dụ thực tế</h2>
+  <pre><code>&lt;?php
+   $filename = $_GET['file'];
+   include("docs/" . $filename);
+?&gt;</code></pre>
+
+  <p>Attacker truy cập:</p>
+  <pre><code>http://example.com/app.php?file=../../../etc/passwd</code></pre>
+
+  <hr>
+
+  <h2>🧨 Mức độ nguy hiểm</h2>
+  <ul>
+    <li>Lộ thông tin nhạy cảm: file cấu hình, mật khẩu, khóa riêng.</li>
+    <li>Phát hiện cấu trúc hệ thống.</li>
+    <li>Kết hợp với RCE nếu attacker ghi được mã độc vào server.</li>
+  </ul>
+
+  <hr>
+
+  <h2>🛠️ Cách khai thác</h2>
+
+  <h3>✅ Mục tiêu:</h3>
+  <ul>
+    <li><code>/etc/passwd</code> (Linux)</li>
+    <li><code>C:\Windows\win.ini</code> (Windows)</li>
+    <li>Các file cấu hình như <code>.env</code>, <code>config.php</code></li>
+  </ul>
+
+  <h3>✅ Công cụ hỗ trợ:</h3>
+  <ul>
+    <li><strong>Burp Suite</strong>: sửa đổi request</li>
+    <li><strong>Dirbuster</strong>, <strong>Dirsearch</strong></li>
+    <li><strong>wfuzz</strong>, <strong>ffuf</strong></li>
+  </ul>
+
+  <hr>
+
+  <h2>🧷 Phòng tránh như thế nào?</h2>
+  <ul>
+    <li><strong>Giới hạn đầu vào:</strong> Chỉ cho phép truy cập tập tin hợp lệ từ danh sách.</li>
+    <li><strong>Loại bỏ chuỗi nguy hiểm:</strong> như <code>../</code>, <code>%2e%2e%2f</code>.</li>
+    <li><strong>Dùng hàm xử lý đường dẫn thật:</strong> như <code>realpath()</code>.</li>
+    <li><strong>Cấu hình server đúng cách:</strong> bật <code>open_basedir</code>.</li>
+    <li><strong>Không lưu file nhạy cảm trong thư mục web.</strong></li>
+  </ul>
+
+  <hr>
+
+  <h2>🕵️‍♂️ Một số lỗi tương tự</h2>
+  <ul>
+    <li><strong>LFI (Local File Inclusion)</strong>: chèn file nội bộ</li>
+    <li><strong>RFI (Remote File Inclusion)</strong>: tải file từ xa</li>
+    <li><strong>IDOR (Insecure Direct Object References)</strong>: truy cập tài nguyên không phân quyền</li>
+  </ul>
+
+  <hr>
+
+  <h2>📚 Tài liệu tham khảo</h2>
+  <ul>
+    <li><a href="https://owasp.org/www-community/attacks/Path_Traversal" target="_blank">OWASP - Path Traversal</a></li>
+    <li><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/File%20Inclusion" target="_blank">PayloadAllTheThings - File Inclusion</a></li>
+  </ul>
+
+  <hr>
+
+  <h2>✍️ Kết luận</h2>
+  <p>Lỗ hổng Path Traversal có thể xuất hiện <strong>ở những nơi bạn không ngờ đến</strong>: từ chức năng tải tài liệu đến các plugin mã nguồn mở. Đừng xem nhẹ nó. Việc <strong>kiểm soát đầu vào</strong> và <strong>hiểu rõ cấu trúc ứng dụng</strong> là những bước đầu tiên để bảo vệ hệ thống khỏi những cuộc tấn công tưởng chừng đơn giản nhưng nguy hiểm chết người.</p>
+
+  <blockquote>Nếu bạn thấy bài viết này hữu ích, hãy chia sẻ hoặc để lại bình luận. Bạn từng gặp Path Traversal “bá đạo” nào? Hãy kể lại để cùng học hỏi nhé!</blockquote>
+
+</body>
+</html>
