@@ -1,32 +1,31 @@
-🧪 Lab Overview
-🎯 Objectives
+# 🧪 Lab Overview
 
-    Recreate security vulnerabilities based on my personal experience and knowledge
+## 🎯 Objectives
 
-    Demonstrate and explore known vulnerabilities to better understand how they work
+- Recreate security vulnerabilities based on my personal experience and knowledge  
+- Demonstrate and explore known vulnerabilities to better understand how they work  
+- Practice both **offensive** (attacker) and **defensive** (blue team) techniques  
+- Emphasize **hands-on learning** — learning through doing, not just reading  
 
-    Practice both offensive (attacker) techniques
+---
 
-    Emphasize hands-on learning — learning through doing, not just reading
-
-📁 Lab Structure
+## 📁 Lab Structure
 
 Each lab typically includes:
 
-    Vulnerable source code or mock applications
+- Vulnerable source code or mock applications  
+- Setup instructions (Docker or local environment)  
+- Writeups and Proof of Concept (PoC) exploits  
+- Fixes or mitigations, where applicable  
 
-    Setup instructions (Docker or local environment)
+---
 
-    Writeups and Proof of Concept (PoC) exploits
+## 📚 References & Inspiration
 
-    Fixes or mitigations, where applicable
+These labs are inspired by both personal experience and well-known sources:
 
-📚 References & Inspiration
+- [CyberJutsu Labs (CBJS)](https://cyberjutsu.io/)  
+- [PortSwigger Web Security Academy](https://portswigger.net/)  
+- CTF challenges and real-world exploitation case studies  
 
-These labs are inspired by both personal experience and established resources like:
-
-    CyberJutsu Labs (CBJS)
-
-    PortSwigger Web Security Academy
-
-    CTF challenges and real-world exploitation cases
+---
